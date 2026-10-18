@@ -1,0 +1,6 @@
+{
+  "name": "KubeForge - Kubernetes Infrastructure & Platform Engineering Blueprints",
+  "description": "Interactive showcase and architecture explorer for production-grade Kubernetes infrastructure projects, GitOps pipelines, eBPF service meshes, autoscaling, and cloud-native stateful systems.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
