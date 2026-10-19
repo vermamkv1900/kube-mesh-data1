@@ -157,3 +157,65 @@ export interface OpenSourceProject {
     code: string;
   };
 }
+
+export type BenchmarkStandard = 
+  | 'CIS Kubernetes Benchmark'
+  | 'NSA & CISA Hardening Guide'
+  | 'PCI-DSS v4.0'
+  | 'SOC 2 Type II'
+  | 'NIST SP 800-190';
+
+export type ComplianceCheckCategory =
+  | 'Control Plane & API'
+  | 'Worker Nodes & Kubelet'
+  | 'Pod Security & Admission'
+  | 'Network Policies & Mesh'
+  | 'RBAC & Identity'
+  | 'Secrets & Data Protection';
+
+export type ComplianceSeverity = 'Critical' | 'High' | 'Medium' | 'Low';
+export type ComplianceStatus = 'PASS' | 'FAIL' | 'WARN';
+
+export interface ComplianceCheck {
+  id: string;
+  standard: BenchmarkStandard;
+  section: string;
+  category: ComplianceCheckCategory;
+  title: string;
+  description: string;
+  auditCommand?: string;
+  rationale: string;
+  severity: ComplianceSeverity;
+  status: ComplianceStatus;
+  remediation: {
+    title: string;
+    type: 'kubectl' | 'yaml' | 'helm';
+    snippet: string;
+  };
+  affectedResource?: string;
+}
+
+export interface ComplianceScorecard {
+  overallScore: number;
+  grade: 'A+' | 'A' | 'A-' | 'B+' | 'B' | 'C' | 'Non-Compliant';
+  totalChecks: number;
+  passedCount: number;
+  warningCount: number;
+  failedCount: number;
+  categoryScores: {
+    category: ComplianceCheckCategory;
+    score: number;
+    passed: number;
+    total: number;
+  }[];
+  benchmarkBreakdown: {
+    standard: BenchmarkStandard;
+    score: number;
+    passed: number;
+    total: number;
+  }[];
+  checks: ComplianceCheck[];
+  lastAuditedAt: string;
+  auditTool: string;
+}
+

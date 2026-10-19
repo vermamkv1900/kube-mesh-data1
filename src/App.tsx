@@ -149,6 +149,10 @@ export default function App() {
         project={selectedProject}
         onClose={() => setSelectedProject(null)}
         onOpenAnomalyReport={handleOpenAnomaly}
+        onExecuteInTerminal={(cmd) => {
+          setActiveTab('terminal');
+          setSelectedProject(null);
+        }}
       />
 
       {/* Cloud Account Connector Modal (AWS & Azure Multi-Region) */}

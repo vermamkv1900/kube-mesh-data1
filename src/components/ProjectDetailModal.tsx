@@ -5,6 +5,7 @@ import { ArchitectureDiagramSvg } from './ArchitectureDiagramSvg';
 import { MermaidTopologyViewer } from './MermaidTopologyViewer';
 import { ResourceEstimationCalculator } from './ResourceEstimationCalculator';
 import { SecurityHardeningView } from './SecurityHardeningView';
+import { ComplianceAuditView } from './ComplianceAuditView';
 import { PipelineFlowView } from './PipelineFlowView';
 import { ClusterHeatMap } from './ClusterHeatMap';
 
@@ -21,7 +22,7 @@ export const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({
   onExecuteInTerminal,
   onOpenAnomalyReport,
 }) => {
-  const [activeTab, setActiveTab] = useState<'topology' | 'manifests' | 'calculator' | 'security' | 'pipeline' | 'heatmap' | 'scenarios' | 'tradeoffs'>('topology');
+  const [activeTab, setActiveTab] = useState<'topology' | 'manifests' | 'calculator' | 'security' | 'compliance' | 'pipeline' | 'heatmap' | 'scenarios' | 'tradeoffs'>('topology');
   const [topologyRenderer, setTopologyRenderer] = useState<'svg' | 'mermaid'>('svg');
   const [selectedManifestIndex, setSelectedManifestIndex] = useState(0);
   const [copied, setCopied] = useState(false);
@@ -165,6 +166,16 @@ export const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({
             }`}
           >
             Security Hardening
+          </button>
+          <button
+            onClick={() => setActiveTab('compliance')}
+            className={`px-3 py-2 text-xs font-semibold border-b-2 transition-colors cursor-pointer whitespace-nowrap ${
+              activeTab === 'compliance'
+                ? 'border-cyan-400 text-cyan-300'
+                : 'border-transparent text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            Compliance Audit (CIS)
           </button>
           <button
             onClick={() => setActiveTab('pipeline')}
@@ -414,6 +425,15 @@ export const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({
           {/* TAB 4: Security Hardening Architecture */}
           {activeTab === 'security' && (
             <SecurityHardeningView project={project} />
+          )}
+
+          {/* TAB: Compliance Audit & CIS Benchmark Scorecard */}
+          {activeTab === 'compliance' && (
+            <ComplianceAuditView
+              project={project}
+              onExecuteInTerminal={onExecuteInTerminal}
+              onOpenAnomalyReport={onOpenAnomalyReport}
+            />
           )}
 
           {/* TAB 5: CI/CD Pipeline Flow */}
