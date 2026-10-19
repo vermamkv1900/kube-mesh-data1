@@ -8,16 +8,22 @@ import { ObservabilityView } from './components/ObservabilityView';
 import { OpenSourceView } from './components/OpenSourceView';
 import { TerminalSimulator } from './components/TerminalSimulator';
 import { ExportModal } from './components/ExportModal';
+import { ClusterHeatMap } from './components/ClusterHeatMap';
+import { CloudAccountConnectorModal } from './components/CloudAccountConnectorModal';
+import { AnomalyReportModal } from './components/AnomalyReportModal';
 
 import { KUBERNETES_PROJECTS } from './data/projectsData';
 import { K8sProject, ProjectCategory } from './types';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<'projects' | 'networking' | 'observability' | 'opensource' | 'terminal'>('projects');
+  const [activeTab, setActiveTab] = useState<'projects' | 'heatmap' | 'networking' | 'observability' | 'opensource' | 'terminal'>('projects');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedProject, setSelectedProject] = useState<K8sProject | null>(null);
   const [isExportOpen, setIsExportOpen] = useState(false);
+  const [isCloudConnectorOpen, setIsCloudConnectorOpen] = useState(false);
+  const [isAnomalyReportOpen, setIsAnomalyReportOpen] = useState(false);
+  const [selectedAnomalyFindingId, setSelectedAnomalyFindingId] = useState<string | undefined>(undefined);
 
   // Extract all categories
   const categories = useMemo(() => {
@@ -45,14 +51,21 @@ export default function App() {
     });
   }, [searchQuery, selectedCategory]);
 
+  const handleOpenAnomaly = (findingId?: string) => {
+    setSelectedAnomalyFindingId(findingId);
+    setIsAnomalyReportOpen(true);
+  };
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-cyan-500/20 selection:text-cyan-200">
       
-      {/* Top Bar Contract Navigation */}
+      {/* Top Bar Navigation */}
       <Header
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         onOpenExport={() => setIsExportOpen(true)}
+        onOpenCloudConnector={() => setIsCloudConnectorOpen(true)}
+        isCloudConnected={true}
       />
 
       {/* Main Content Area */}
@@ -116,6 +129,12 @@ export default function App() {
           </div>
         )}
 
+        {activeTab === 'heatmap' && (
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+            <ClusterHeatMap onOpenAnomalyReport={handleOpenAnomaly} />
+          </div>
+        )}
+
         {activeTab === 'networking' && <NetworkingView />}
 
         {activeTab === 'observability' && <ObservabilityView />}
@@ -129,6 +148,20 @@ export default function App() {
       <ProjectDetailModal
         project={selectedProject}
         onClose={() => setSelectedProject(null)}
+        onOpenAnomalyReport={handleOpenAnomaly}
+      />
+
+      {/* Cloud Account Connector Modal (AWS & Azure Multi-Region) */}
+      <CloudAccountConnectorModal
+        isOpen={isCloudConnectorOpen}
+        onClose={() => setIsCloudConnectorOpen(false)}
+      />
+
+      {/* Anomaly SRE Report Modal to IT Admin & DL */}
+      <AnomalyReportModal
+        isOpen={isAnomalyReportOpen}
+        onClose={() => setIsAnomalyReportOpen(false)}
+        initialAnomalyId={selectedAnomalyFindingId}
       />
 
       {/* Export Manifests Modal */}
@@ -143,15 +176,27 @@ export default function App() {
           <div>
             <span className="font-semibold text-slate-400">KubeForge Platform Blueprints</span>
             <span className="mx-2" aria-hidden="true">·</span>
-            <span>Declarative Kubernetes Infrastructure Suite</span>
+            <span>Declarative Multi-Cloud Kubernetes Infrastructure Suite</span>
           </div>
 
-          <div className="flex items-center gap-6">
+          <div className="flex flex-wrap items-center gap-6">
             <button
               onClick={() => setActiveTab('projects')}
               className="hover:text-slate-300 transition-colors cursor-pointer"
             >
               Projects
+            </button>
+            <button
+              onClick={() => setActiveTab('heatmap')}
+              className="hover:text-slate-300 transition-colors cursor-pointer text-cyan-400"
+            >
+              Heat Map & Anomalies
+            </button>
+            <button
+              onClick={() => setIsCloudConnectorOpen(true)}
+              className="hover:text-slate-300 transition-colors cursor-pointer text-amber-400"
+            >
+              Connect Cloud (AWS/Azure)
             </button>
             <button
               onClick={() => setActiveTab('networking')}
@@ -164,12 +209,6 @@ export default function App() {
               className="hover:text-slate-300 transition-colors cursor-pointer"
             >
               Observability
-            </button>
-            <button
-              onClick={() => setActiveTab('opensource')}
-              className="hover:text-slate-300 transition-colors cursor-pointer"
-            >
-              Open Source
             </button>
             <button
               onClick={() => setActiveTab('terminal')}

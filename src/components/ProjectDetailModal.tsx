@@ -1,23 +1,28 @@
 import React, { useState } from 'react';
-import { X, Copy, Check, Download, Play, Terminal, ArrowRight, Layers, ShieldAlert, Cpu } from 'lucide-react';
+import { X, Copy, Check, Download, Play, Terminal, ArrowRight, Layers, ShieldAlert, Cpu, AlertTriangle } from 'lucide-react';
 import { K8sProject, TopologyNode } from '../types';
 import { ArchitectureDiagramSvg } from './ArchitectureDiagramSvg';
+import { MermaidTopologyViewer } from './MermaidTopologyViewer';
 import { ResourceEstimationCalculator } from './ResourceEstimationCalculator';
 import { SecurityHardeningView } from './SecurityHardeningView';
 import { PipelineFlowView } from './PipelineFlowView';
+import { ClusterHeatMap } from './ClusterHeatMap';
 
 interface ProjectDetailModalProps {
   project: K8sProject | null;
   onClose: () => void;
   onExecuteInTerminal?: (cmd: string) => void;
+  onOpenAnomalyReport?: (findingId?: string) => void;
 }
 
 export const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({
   project,
   onClose,
   onExecuteInTerminal,
+  onOpenAnomalyReport,
 }) => {
-  const [activeTab, setActiveTab] = useState<'topology' | 'manifests' | 'calculator' | 'security' | 'pipeline' | 'scenarios' | 'tradeoffs'>('topology');
+  const [activeTab, setActiveTab] = useState<'topology' | 'manifests' | 'calculator' | 'security' | 'pipeline' | 'heatmap' | 'scenarios' | 'tradeoffs'>('topology');
+  const [topologyRenderer, setTopologyRenderer] = useState<'svg' | 'mermaid'>('svg');
   const [selectedManifestIndex, setSelectedManifestIndex] = useState(0);
   const [copied, setCopied] = useState(false);
   const [selectedNode, setSelectedNode] = useState<TopologyNode | null>(null);
@@ -87,13 +92,26 @@ export const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({
             </h2>
           </div>
           
-          <button
-            onClick={onClose}
-            className="p-1.5 text-slate-400 hover:text-white rounded bg-slate-800/80 hover:bg-slate-800 transition-colors cursor-pointer"
-            aria-label="Close modal"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-2 shrink-0">
+            {onOpenAnomalyReport && (
+              <button
+                onClick={() => onOpenAnomalyReport()}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-950 bg-rose-400 hover:bg-rose-300 rounded transition-colors cursor-pointer"
+              >
+                <AlertTriangle className="w-3.5 h-3.5 fill-current" />
+                <span className="hidden sm:inline">Report Anomaly to IT Admin</span>
+                <span className="sm:hidden">Report</span>
+              </button>
+            )}
+
+            <button
+              onClick={onClose}
+              className="p-1.5 text-slate-400 hover:text-white rounded bg-slate-800/80 hover:bg-slate-800 transition-colors cursor-pointer"
+              aria-label="Close modal"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
         {/* Modal Navigation Tabs (Interactive Segmented Control) */}
@@ -107,6 +125,16 @@ export const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({
             }`}
           >
             Architecture Topology ({project.topology.nodes.length} Nodes)
+          </button>
+          <button
+            onClick={() => setActiveTab('heatmap')}
+            className={`px-3 py-2 text-xs font-semibold border-b-2 transition-colors cursor-pointer whitespace-nowrap ${
+              activeTab === 'heatmap'
+                ? 'border-cyan-400 text-cyan-300'
+                : 'border-transparent text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            Node & Pod Heat Map
           </button>
           <button
             onClick={() => setActiveTab('manifests')}
@@ -176,17 +204,52 @@ export const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({
           {/* TAB 1: Topology */}
           {activeTab === 'topology' && (
             <div className="space-y-6">
-              <div className="text-sm text-slate-300 leading-relaxed">
-                {project.architectureSummary}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-850">
+                <div className="text-sm text-slate-300 leading-relaxed max-w-2xl">
+                  {project.architectureSummary}
+                </div>
+
+                {/* Switch between SVG and Mermaid renderer */}
+                <div className="flex items-center bg-slate-900 border border-slate-800 rounded p-0.5 text-xs font-mono shrink-0">
+                  <button
+                    onClick={() => setTopologyRenderer('svg')}
+                    className={`px-3 py-1 rounded transition-colors cursor-pointer ${
+                      topologyRenderer === 'svg'
+                        ? 'bg-cyan-500/20 text-cyan-300 font-semibold border border-cyan-500/40'
+                        : 'text-slate-400 hover:text-slate-200'
+                    }`}
+                  >
+                    Custom SVG Graph
+                  </button>
+                  <button
+                    onClick={() => setTopologyRenderer('mermaid')}
+                    className={`px-3 py-1 rounded transition-colors cursor-pointer ${
+                      topologyRenderer === 'mermaid'
+                        ? 'bg-cyan-500/20 text-cyan-300 font-semibold border border-cyan-500/40'
+                        : 'text-slate-400 hover:text-slate-200'
+                    }`}
+                  >
+                    Mermaid.js Flowchart
+                  </button>
+                </div>
               </div>
 
-              {/* Dynamic Interactive SVG Architecture Diagram */}
-              <ArchitectureDiagramSvg
-                nodes={project.topology.nodes}
-                edges={project.topology.edges}
-                selectedNode={selectedNode}
-                onSelectNode={setSelectedNode}
-              />
+              {/* Render either SVG or Mermaid */}
+              {topologyRenderer === 'svg' ? (
+                <ArchitectureDiagramSvg
+                  nodes={project.topology.nodes}
+                  edges={project.topology.edges}
+                  selectedNode={selectedNode}
+                  onSelectNode={setSelectedNode}
+                />
+              ) : (
+                <MermaidTopologyViewer
+                  nodes={project.topology.nodes}
+                  edges={project.topology.edges}
+                  projectTitle={project.title}
+                  architectureSummary={project.architectureSummary}
+                />
+              )}
 
               {/* Selected Node Details Drawer */}
               {selectedNode && (
@@ -284,7 +347,12 @@ export const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({
             </div>
           )}
 
-          {/* TAB 2: Manifests */}
+          {/* TAB 2: Node & Pod Heat Map */}
+          {activeTab === 'heatmap' && (
+            <ClusterHeatMap onOpenAnomalyReport={onOpenAnomalyReport} />
+          )}
+
+          {/* TAB 3: Manifests */}
           {activeTab === 'manifests' && (
             <div className="space-y-4">
               {/* Manifest selector pills */}
