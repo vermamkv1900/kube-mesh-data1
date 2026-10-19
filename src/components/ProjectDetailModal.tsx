@@ -8,6 +8,7 @@ import { SecurityHardeningView } from './SecurityHardeningView';
 import { ComplianceAuditView } from './ComplianceAuditView';
 import { PipelineFlowView } from './PipelineFlowView';
 import { ClusterHeatMap } from './ClusterHeatMap';
+import { AggregatedLogExplorer } from './AggregatedLogExplorer';
 
 interface ProjectDetailModalProps {
   project: K8sProject | null;
@@ -22,7 +23,7 @@ export const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({
   onExecuteInTerminal,
   onOpenAnomalyReport,
 }) => {
-  const [activeTab, setActiveTab] = useState<'topology' | 'manifests' | 'calculator' | 'security' | 'compliance' | 'pipeline' | 'heatmap' | 'scenarios' | 'tradeoffs'>('topology');
+  const [activeTab, setActiveTab] = useState<'topology' | 'heatmap' | 'logs' | 'manifests' | 'calculator' | 'security' | 'compliance' | 'pipeline' | 'scenarios' | 'tradeoffs'>('topology');
   const [topologyRenderer, setTopologyRenderer] = useState<'svg' | 'mermaid'>('svg');
   const [selectedManifestIndex, setSelectedManifestIndex] = useState(0);
   const [copied, setCopied] = useState(false);
@@ -136,6 +137,16 @@ export const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({
             }`}
           >
             Node & Pod Heat Map
+          </button>
+          <button
+            onClick={() => setActiveTab('logs')}
+            className={`px-3 py-2 text-xs font-semibold border-b-2 transition-colors cursor-pointer whitespace-nowrap ${
+              activeTab === 'logs'
+                ? 'border-cyan-400 text-cyan-300'
+                : 'border-transparent text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            Aggregated Log Explorer
           </button>
           <button
             onClick={() => setActiveTab('manifests')}
@@ -361,6 +372,15 @@ export const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({
           {/* TAB 2: Node & Pod Heat Map */}
           {activeTab === 'heatmap' && (
             <ClusterHeatMap onOpenAnomalyReport={onOpenAnomalyReport} />
+          )}
+
+          {/* TAB: Aggregated Log Explorer (Grafana Loki & Kibana Engine) */}
+          {activeTab === 'logs' && (
+            <AggregatedLogExplorer
+              project={project}
+              onOpenAnomalyReport={onOpenAnomalyReport}
+              onExecuteInTerminal={onExecuteInTerminal}
+            />
           )}
 
           {/* TAB 3: Manifests */}

@@ -219,3 +219,22 @@ export interface ComplianceScorecard {
   auditTool: string;
 }
 
+export type LogLevel = 'FATAL' | 'ERROR' | 'WARN' | 'INFO' | 'DEBUG';
+
+export interface LogEntry {
+  id: string;
+  timestamp: string;
+  level: LogLevel;
+  component: string;
+  podName: string;
+  namespace: string;
+  message: string;
+  rawJson?: Record<string, any>;
+  traceId?: string;
+  spanId?: string;
+  caller?: string;
+  httpStatus?: number;
+  durationMs?: number;
+}
+
+
