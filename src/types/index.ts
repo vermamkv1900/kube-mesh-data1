@@ -237,4 +237,194 @@ export interface LogEntry {
   durationMs?: number;
 }
 
+// ==========================================
+// REALISTIC KUBERNETES CLUSTER & TELEMETRY TYPES
+// ==========================================
+
+export interface NodeTimeSeriesPoint {
+  timestamp: string;
+  cpuPercent: number;
+  memoryPercent: number;
+  diskIoOpsSec: number;
+  networkThroughputMbps: number;
+  temperatureC: number;
+  load1m: number;
+}
+
+export interface NodeCondition {
+  type: 'Ready' | 'DiskPressure' | 'MemoryPressure' | 'PIDPressure' | 'NetworkUnavailable';
+  status: boolean;
+  message: string;
+  lastTransitionTime: string;
+}
+
+export interface NodeTaint {
+  key: string;
+  value?: string;
+  effect: 'NoSchedule' | 'PreferNoSchedule' | 'NoExecute';
+}
+
+export interface ClusterNodeDetailed {
+  id: string;
+  name: string;
+  role: 'control-plane' | 'worker-spot' | 'worker-ondemand' | 'worker-gpu' | 'worker-edge';
+  zone: string;
+  instanceType: string;
+  internalIP: string;
+  externalIP?: string;
+  kubeletVersion: string;
+  containerRuntime: string;
+  osImage: string;
+  kernelVersion: string;
+  podCIDR: string;
+  status: 'Ready' | 'Warning' | 'Critical';
+  capacity: {
+    cpuCores: number;
+    memoryGiB: number;
+    pods: number;
+    ephemeralStorageGiB: number;
+  };
+  allocatable: {
+    cpuCores: number;
+    memoryGiB: number;
+    pods: number;
+    ephemeralStorageGiB: number;
+  };
+  usage: {
+    cpuPercent: number;
+    cpuCores: number;
+    memoryPercent: number;
+    memoryGiB: number;
+    memoryWorkingSetGiB: number;
+    diskIoPercent: number;
+    diskIoOpsSec: number;
+    networkRxMbps: number;
+    networkTxMbps: number;
+    temperatureC: number;
+    podCount: number;
+  };
+  conditions: NodeCondition[];
+  taints: NodeTaint[];
+  labels: Record<string, string>;
+  history: NodeTimeSeriesPoint[];
+  runningPodIds: string[];
+}
+
+export interface VolumeTimeSeriesPoint {
+  timestamp: string;
+  iopsRead: number;
+  iopsWrite: number;
+  throughputMBs: number;
+  usedGiB: number;
+}
+
+export interface PodVolumetric {
+  volumeName: string;
+  pvcName: string;
+  pvName: string;
+  storageClass: string;
+  accessMode: 'ReadWriteOnce' | 'ReadWriteMany' | 'ReadOnlyMany';
+  csiDriver: string;
+  mountPath: string;
+  capacityGiB: number;
+  usedGiB: number;
+  usagePercent: number;
+  iopsRead: number;
+  iopsWrite: number;
+  throughputReadMBs: number;
+  throughputWriteMBs: number;
+  inodesTotal: number;
+  inodesUsed: number;
+  inodesPercent: number;
+  fileSystemType: 'ext4' | 'xfs';
+  volumeStatus: 'Bound' | 'Mounted' | 'Syncing' | 'Degraded';
+  history: VolumeTimeSeriesPoint[];
+}
+
+export interface PodTimeSeriesPoint {
+  timestamp: string;
+  cpuThrottlePercent: number;
+  memoryPercent: number;
+  networkThroughputMbps: number;
+  volumetricIops: number;
+}
+
+export interface PodRestartEvent {
+  timestamp: string;
+  exitCode: number;
+  reason: string;
+  message: string;
+}
+
+export interface ClusterPodDetailed {
+  id: string;
+  name: string;
+  namespace: string;
+  nodeName: string;
+  podIP: string;
+  qosClass: 'Guaranteed' | 'Burstable' | 'BestEffort';
+  status: 'Running' | 'Throttled' | 'CrashLoop' | 'Evicted';
+  restarts: number;
+  cpuUsageCores: number;
+  cpuLimitCores: number;
+  cpuRequestCores: number;
+  cpuThrottlePercent: number;
+  memoryUsageMiB: number;
+  memoryLimitMiB: number;
+  memoryRequestMiB: number;
+  memoryPercent: number;
+  networkRxMb: number;
+  networkTxMb: number;
+  containerStatuses: {
+    name: string;
+    image: string;
+    ready: boolean;
+    restartCount: number;
+    state: 'running' | 'waiting' | 'terminated';
+    lastTerminationReason?: string;
+    lastExitCode?: number;
+  }[];
+  volumetrics: PodVolumetric[];
+  history: PodTimeSeriesPoint[];
+  restartEvents: PodRestartEvent[];
+}
+
+export interface PodConnection {
+  id: string;
+  sourcePodId: string;
+  targetPodId: string;
+  sourcePodName: string;
+  targetPodName: string;
+  sourceNamespace: string;
+  targetNamespace: string;
+  protocol: 'HTTP/2' | 'gRPC' | 'TCP' | 'TLS/mTLS' | 'PostgreSQL Wire' | 'Redis RESP' | 'eBPF Direct';
+  port: number;
+  requestsPerSec: number;
+  bandwidthMbps: number;
+  latencyP95Ms: number;
+  latencyP99Ms: number;
+  packetLossPercent: number;
+  health: 'nominal' | 'elevated' | 'congested' | 'degraded';
+  networkPolicyAllowed: boolean;
+  encrypted: boolean;
+}
+
+export interface ClusterArchitectureComponent {
+  id: string;
+  name: string;
+  layer: 'control-plane' | 'node-pools' | 'networking-fabric' | 'storage-csi' | 'observability';
+  sublayer?: string;
+  role: string;
+  redundancy: string;
+  health: 'Operational' | 'Degraded' | 'Warning';
+  details: {
+    version: string;
+    instances: number;
+    ports: string;
+    protocol: string;
+    description: string;
+    keyMetrics: Record<string, string>;
+  };
+}
+
 

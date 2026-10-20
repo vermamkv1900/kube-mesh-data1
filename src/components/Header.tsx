@@ -54,7 +54,7 @@ export const Header: React.FC<HeaderProps> = ({
                 : 'text-slate-400 hover:text-slate-200'
             }`}
           >
-            Node & Pod Heat Map
+            Cluster Architecture & Heat Map
           </button>
           
           <button

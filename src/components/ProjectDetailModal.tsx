@@ -136,7 +136,7 @@ export const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({
                 : 'border-transparent text-slate-400 hover:text-slate-200'
             }`}
           >
-            Node & Pod Heat Map
+            Cluster Heat Map & Nodes
           </button>
           <button
             onClick={() => setActiveTab('logs')}
